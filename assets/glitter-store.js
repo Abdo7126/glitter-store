@@ -294,14 +294,14 @@
     $("#productDrawer").innerHTML = `
       <div class="drawer-head"><strong>${escape(p.name)}</strong><button class="icon-btn" id="closeDrawer" type="button">×</button></div>
       <div class="drawer-body">
-        <div class="product-visual" style="--visual-tone:${escape(p.tone || "#d8c082")}">${p.badge ? `<span class="badge">${escape(p.badge)}</span>` : ""}${image}</div>
+        <div class="drawer-product-visual" style="--visual-tone:${escape(p.tone || "#d8c082")}">${p.badge ? `<span class="badge">${escape(p.badge)}</span>` : ""}${image}</div>
         <div class="price"><span>${money(p.price)}</span>${Number(p.oldPrice) > 0 ? `<del>${money(p.oldPrice)}</del>` : ""}</div>
         <p class="detail-box">${escape(p.detailsDescription || p.description).replace(/\n/g, "<br>")}</p>
         ${p.sizeImage ? `<div class="detail-box"><strong>${text("مقاسات المنتج", "Product sizing")}</strong><img src="${escape(p.sizeImage)}" alt=""></div>` : ""}
         <div><div class="option-label">${text("المقاس", "Size")}</div><div class="size-row">${(p.sizes || ["Free"]).map(size => `<button class="size-chip ${selectedOptions.size === size ? "active" : ""}" data-size="${escape(size)}">${escape(size)}</button>`).join("")}</div></div>
         <div><div class="option-label">${text("اللون", "Color")}</div><div class="color-row">${(p.colors || [{ name: "Basic", value: "#c9a34d" }]).map(color => `<button class="swatch ${selectedOptions.color === color.name ? "active" : ""}" title="${escape(color.name)}" style="background:${escape(color.value)}" data-color="${escape(color.name)}"></button>`).join("")}</div></div>
         <div><div class="option-label">${text("الكمية", "Qty")}</div><div class="actions-row"><button class="btn" id="qtyMinus" type="button">-</button><strong>${selectedQty}</strong><button class="btn" id="qtyPlus" type="button">+</button></div></div>
-        <button class="gold-btn" id="addToCart" type="button">${text("إضافة للسلة", "Add to cart")}</button>
+        <div class="drawer-actions-sticky"><button class="gold-btn" id="addToCart" type="button">${text("إضافة للسلة", "Add to cart")}</button></div>
       </div>`;
     $("#closeDrawer").addEventListener("click", closeDrawer);
     document.querySelectorAll("[data-size]").forEach(button => button.addEventListener("click", () => { selectedOptions.size = button.dataset.size; renderProductDrawer(); }));

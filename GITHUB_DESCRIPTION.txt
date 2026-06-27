@@ -1,0 +1,1 @@
+Premium static fashion e-commerce website for Glitter / GL Fashion with men, women, and kids sections, Arabic/English support, dark mode, cart checkout, WhatsApp orders, EmailJS notifications, and a browser-based admin dashboard. Built with HTML, CSS, and JavaScript for GitHub Pages.

@@ -11,6 +11,28 @@
   let admins = G.getAdmins();
   let currentAdmin = admins.find(admin => admin.id === localStorage.getItem(G.keys.session));
   let visualSelection = { type: "hero" };
+  let workingColors = [];
+
+  const COLOR_PRESETS = [
+    { name: "أسود", value: "#171513" },
+    { name: "أبيض", value: "#ffffff" },
+    { name: "أوف وايت", value: "#f4efe2" },
+    { name: "رمادي", value: "#8f9189" },
+    { name: "فضي", value: "#c6c7c2" },
+    { name: "بيج", value: "#d6c3a1" },
+    { name: "جملي", value: "#b68a55" },
+    { name: "ذهبي", value: "#c9a34d" },
+    { name: "بني", value: "#6d4f35" },
+    { name: "كحلي", value: "#1f2f46" },
+    { name: "أزرق", value: "#315f9f" },
+    { name: "لبني", value: "#9fc4dc" },
+    { name: "أخضر", value: "#3f6f52" },
+    { name: "زيتوني", value: "#70734b" },
+    { name: "أحمر", value: "#a72f2f" },
+    { name: "نبيتي", value: "#6f2331" },
+    { name: "وردي", value: "#d9a3ac" },
+    { name: "موف", value: "#8a6aa6" }
+  ];
 
   function escape(value) { return G.escapeHtml(value); }
   function money(value) { return G.money(value); }
@@ -111,11 +133,11 @@
       products: "أضف صور المنتجات من جهازك أو برابط، وحدد القسم والجمهور.",
       visual: "اضغط على عناصر موقع التسوق وعدل النصوص والصور والترتيب بدون كود.",
       orders: "تابع الطلبات وغير حالتها.",
-      coupons: "أنشئ أكواد خصم للمتجر.",
+      coupons: "أنشئ أكواد خصم واضبط قواعد الشحن.",
       motion: "أضف صور أو فيديوهات للعروض المتحركة.",
       invoice: "عدل بيانات الضمان والاستبدال ونص الفاتورة.",
       managers: "أضف مديرين فرعيين أو عدل كلمات المرور.",
-      settings: "واتساب، إيميل، EmailJS، والشحن."
+      settings: "واتساب، إيميل، وبيانات EmailJS."
     }[page] || "";
   }
 
@@ -144,6 +166,7 @@
         <input type="hidden" id="productId">
         <input type="hidden" id="productImageValue">
         <input type="hidden" id="productSizeImageValue">
+        <input type="hidden" id="productColors">
         <div class="form-grid">
           ${field("productName", "اسم المنتج")}
           ${field("productCategory", "القسم")}
@@ -165,7 +188,21 @@
           <div class="field full"><label>صورة مقاسات المنتج من الجهاز</label><input id="productSizeFile" type="file" accept="image/*"></div>
           <div class="field full"><label>أو رابط صورة المقاسات</label><input id="productSizeImageUrl" placeholder="https://..."></div>
           <div class="field"><label>المقاسات</label><textarea id="productSizes" required placeholder="S, M, L, XL"></textarea></div>
-          <div class="field"><label>الألوان</label><textarea id="productColors" required placeholder="أسود:#171513&#10;ذهبي:#c9a34d"></textarea></div>
+          <div class="field full">
+            <label>الألوان</label>
+            <div class="color-builder">
+              <div class="form-grid">
+                <div class="field"><label>لون جاهز</label><select id="colorPreset">${COLOR_PRESETS.map(color => `<option value="${color.value}">${color.name}</option>`).join("")}</select></div>
+                <div class="field"><label>اختيار لون مخصص</label><input id="customColorValue" type="color" value="#c9a34d"></div>
+                <div class="field full"><label>اسم اللون المخصص</label><input id="customColorName" placeholder="مثال: ذهبي هادئ"></div>
+              </div>
+              <div class="actions-row">
+                <button class="btn" id="addPresetColor" type="button">إضافة اللون الجاهز</button>
+                <button class="btn" id="addCustomColor" type="button">إضافة لون مخصص</button>
+              </div>
+              <div class="color-token-list" id="productColorsList"></div>
+            </div>
+          </div>
           <label class="field full"><input id="productFeatured" type="checkbox"> منتج مميز</label>
         </div>
         <div class="actions-row" style="margin-top:14px"><button class="gold-btn" type="submit">حفظ المنتج</button><button class="btn" id="newProductBtn" type="button">منتج جديد</button></div>
@@ -173,6 +210,7 @@
       <div class="admin-card"><h2>المنتجات</h2><div class="table-wrap"><table><thead><tr><th>المنتج</th><th>الجمهور</th><th>السعر</th><th>الإجراءات</th></tr></thead><tbody id="productsBody"></tbody></table></div></div>
     </div>`;
     bindProductForm();
+    fillProduct();
     renderProductsTable();
   }
 
@@ -185,6 +223,49 @@
     $("#newProductBtn").addEventListener("click", () => fillProduct());
     $("#productImageFile").addEventListener("change", event => loadFile(event.target.files[0], value => { $("#productImageValue").value = value; $("#productImageUrl").value = ""; }));
     $("#productSizeFile").addEventListener("change", event => loadFile(event.target.files[0], value => { $("#productSizeImageValue").value = value; $("#productSizeImageUrl").value = ""; }));
+    $("#addPresetColor").addEventListener("click", () => {
+      const preset = COLOR_PRESETS.find(color => color.value === $("#colorPreset").value) || COLOR_PRESETS[0];
+      addWorkingColor(preset);
+    });
+    $("#addCustomColor").addEventListener("click", () => {
+      const value = $("#customColorValue").value || "#c9a34d";
+      const name = $("#customColorName").value.trim() || `لون مخصص ${workingColors.length + 1}`;
+      addWorkingColor({ name, value });
+      $("#customColorName").value = "";
+    });
+    renderWorkingColors();
+  }
+
+  function normalizeColorObject(color) {
+    if (!color) return null;
+    return {
+      name: String(color.name || "لون").trim(),
+      value: String(color.value || "#c9a34d").trim()
+    };
+  }
+
+  function addWorkingColor(color) {
+    const normalized = normalizeColorObject(color);
+    if (!normalized) return;
+    const exists = workingColors.some(item => item.name === normalized.name && item.value.toLowerCase() === normalized.value.toLowerCase());
+    if (!exists) workingColors.push(normalized);
+    renderWorkingColors();
+  }
+
+  function renderWorkingColors() {
+    const input = $("#productColors");
+    const list = $("#productColorsList");
+    if (input) input.value = JSON.stringify(workingColors);
+    if (!list) return;
+    if (!workingColors.length) {
+      list.innerHTML = `<div class="empty compact">لم يتم اختيار ألوان بعد.</div>`;
+      return;
+    }
+    list.innerHTML = workingColors.map((color, index) => `<button class="color-token" type="button" data-remove-color="${index}" title="حذف ${escape(color.name)}"><span class="color-dot" style="background:${escape(color.value)}"></span><span>${escape(color.name)} <small>${escape(color.value)}</small></span></button>`).join("");
+    document.querySelectorAll("[data-remove-color]").forEach(button => button.addEventListener("click", () => {
+      workingColors.splice(Number(button.dataset.removeColor), 1);
+      renderWorkingColors();
+    }));
   }
 
   function loadFile(file, callback) {
@@ -199,10 +280,16 @@
   }
 
   function parseColors(value) {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed) && parsed.length) return parsed.map(normalizeColorObject).filter(Boolean);
+    } catch (error) {
+      // Older admin forms stored colors as name:#hex lines.
+    }
     return value.split(/\n+/).map(item => item.trim()).filter(Boolean).map(line => {
       const [name, color] = line.split(":");
-      return { name: (name || "لون").trim(), value: (color || "#c9a34d").trim() };
-    });
+      return normalizeColorObject({ name: (name || "لون").trim(), value: (color || "#c9a34d").trim() });
+    }).filter(Boolean);
   }
 
   function fillProduct(product = null) {
@@ -223,7 +310,8 @@
     $("#productSizeImageValue").value = product?.sizeImage || "";
     $("#productSizeImageUrl").value = product?.sizeImage && !product.sizeImage.startsWith("data:") ? product.sizeImage : "";
     $("#productSizes").value = (product?.sizes || ["S", "M", "L", "XL"]).join(", ");
-    $("#productColors").value = (product?.colors || [{ name: "أسود", value: "#171513" }]).map(color => `${color.name}:${color.value}`).join("\n");
+    workingColors = (product?.colors?.length ? product.colors : [{ name: "أسود", value: "#171513" }]).map(normalizeColorObject).filter(Boolean);
+    renderWorkingColors();
     $("#productFeatured").checked = Boolean(product?.featured);
     document.querySelectorAll("input[name='audience']").forEach(input => input.checked = (product?.audiences || []).includes(input.value));
   }
@@ -250,7 +338,7 @@
       detailsDescription: $("#productDetailsDescription").value.trim(),
       sizeImage: $("#productSizeImageUrl").value.trim() || $("#productSizeImageValue").value.trim(),
       sizes: parseList($("#productSizes").value),
-      colors: parseColors($("#productColors").value),
+      colors: workingColors.length ? workingColors.map(normalizeColorObject).filter(Boolean) : parseColors($("#productColors").value),
       featured: $("#productFeatured").checked,
       createdAt: existing?.createdAt || new Date().toISOString()
     };
@@ -374,12 +462,28 @@
   }
 
   function renderCoupons() {
-    $("#adminContent").innerHTML = `<form class="form-panel" id="couponForm"><h2>كوبون جديد</h2><div class="form-grid">${field("couponCode", "الكود")}${field("couponValue", "قيمة الخصم", "number")}<div class="field"><label>النوع</label><select id="couponType"><option value="percent">نسبة</option><option value="fixed">مبلغ ثابت</option></select></div>${field("couponMin", "حد أدنى", "number")}</div><button class="gold-btn">حفظ</button></form><div class="admin-card" style="margin-top:14px"><div class="table-wrap"><table><thead><tr><th>الكود</th><th>القيمة</th><th>الحالة</th></tr></thead><tbody>${coupons.map(c => `<tr><td>${escape(c.code)}</td><td>${c.type === "percent" ? c.value + "%" : money(c.value)}</td><td>${c.active ? "نشط" : "متوقف"}</td></tr>`).join("")}</tbody></table></div></div>`;
+    $("#adminContent").innerHTML = `<div class="admin-two">
+      <form class="form-panel" id="couponForm"><h2>كوبون جديد</h2><div class="form-grid">${field("couponCode", "الكود")}${field("couponValue", "قيمة الخصم", "number")}<div class="field"><label>النوع</label><select id="couponType"><option value="percent">نسبة</option><option value="fixed">مبلغ ثابت</option></select></div>${field("couponMin", "حد أدنى", "number")}</div><button class="gold-btn">حفظ</button></form>
+      <form class="form-panel" id="shippingRulesForm"><h2>الشحن</h2><div class="form-grid">${field("shippingFee", "تكلفة الشحن", "number")}${field("freeShippingFrom", "شحن مجاني بداية من", "number")}</div><button class="gold-btn">حفظ الشحن</button></form>
+    </div>
+    <div class="admin-card" style="margin-top:14px"><div class="table-wrap"><table><thead><tr><th>الكود</th><th>القيمة</th><th>الحالة</th></tr></thead><tbody>${coupons.map(c => `<tr><td>${escape(c.code)}</td><td>${c.type === "percent" ? c.value + "%" : money(c.value)}</td><td>${c.active ? "نشط" : "متوقف"}</td></tr>`).join("")}</tbody></table></div></div>`;
+    $("#shippingFee").value = settings.shippingFee;
+    $("#freeShippingFrom").value = settings.freeShippingFrom;
     $("#couponForm").addEventListener("submit", event => {
       event.preventDefault();
       coupons.unshift({ id: `c-${Date.now()}`, code: $("#couponCode").value.trim().toUpperCase(), type: $("#couponType").value, value: Number($("#couponValue").value || 0), minOrder: Number($("#couponMin").value || 0), maxDiscount: 0, expiresAt: "", active: true, usage: 0 });
       G.saveCoupons(coupons);
       renderCoupons();
+    });
+    $("#shippingRulesForm").addEventListener("submit", event => {
+      event.preventDefault();
+      settings = {
+        ...settings,
+        shippingFee: Number($("#shippingFee").value || 0),
+        freeShippingFrom: Number($("#freeShippingFrom").value || 0)
+      };
+      G.saveSettings(settings);
+      toast("تم حفظ إعدادات الشحن.");
     });
   }
 
@@ -406,13 +510,9 @@
         ${textField("emailjsServiceId", "EmailJS Service ID", settings.emailjsServiceId)}
         ${textField("emailjsTemplateId", "EmailJS Template ID", settings.emailjsTemplateId)}
         ${textField("emailjsPublicKey", "EmailJS Public Key", settings.emailjsPublicKey)}
-        ${field("shippingFee", "تكلفة الشحن", "number")}
-        ${field("freeShippingFrom", "شحن مجاني من", "number")}
       </div>
       <button class="gold-btn">حفظ الإعدادات</button>
     </form>`;
-    $("#shippingFee").value = settings.shippingFee;
-    $("#freeShippingFrom").value = settings.freeShippingFrom;
     $("#settingsForm").addEventListener("submit", event => {
       event.preventDefault();
       settings = {
@@ -425,9 +525,7 @@
         emailjsEnabled: $("#emailjsEnabled").checked,
         emailjsServiceId: $("#emailjsServiceId").value,
         emailjsTemplateId: $("#emailjsTemplateId").value,
-        emailjsPublicKey: $("#emailjsPublicKey").value,
-        shippingFee: Number($("#shippingFee").value || 0),
-        freeShippingFrom: Number($("#freeShippingFrom").value || 0)
+        emailjsPublicKey: $("#emailjsPublicKey").value
       };
       G.saveSettings(settings);
       toast("تم حفظ الإعدادات.");
