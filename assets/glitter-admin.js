@@ -453,12 +453,34 @@
   }
 
   function renderOrders() {
-    $("#adminContent").innerHTML = `<div class="admin-card"><div class="table-wrap"><table><thead><tr><th>الطلب</th><th>العميل</th><th>الإجمالي</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody>${orders.map(order => `<tr><td>${escape(order.id)}</td><td>${escape(order.customer?.name || "-")}<br>${escape(order.customer?.phone || "")}</td><td>${money(order.total)}</td><td>${escape(order.status || "new")}</td><td><button class="btn" data-confirm="${escape(order.id)}">تأكيد</button></td></tr>`).join("") || `<tr><td colspan="5"><div class="empty">لا توجد طلبات.</div></td></tr>`}</tbody></table></div></div>`;
+    $("#adminContent").innerHTML = `<div class="admin-card">
+      <div class="actions-row" style="justify-content:space-between;margin-bottom:12px">
+        <h2>الطلبات</h2>
+        <button class="btn" id="clearOrdersBtn" type="button" ${orders.length ? "" : "disabled"}>حذف كل الطلبات السابقة</button>
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>الطلب</th><th>العميل</th><th>الإجمالي</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody>${orders.map(order => `<tr><td>${escape(order.id)}</td><td>${escape(order.customer?.name || "-")}<br>${escape(order.customer?.phone || "")}</td><td>${money(order.total)}</td><td>${escape(order.status || "new")}</td><td><div class="actions-row"><button class="btn" data-confirm="${escape(order.id)}">تأكيد</button><button class="btn" data-delete-order="${escape(order.id)}">حذف</button></div></td></tr>`).join("") || `<tr><td colspan="5"><div class="empty">لا توجد طلبات.</div></td></tr>`}</tbody></table></div>
+    </div>`;
     document.querySelectorAll("[data-confirm]").forEach(button => button.addEventListener("click", () => {
       orders = orders.map(order => order.id === button.dataset.confirm ? { ...order, status: "confirmed" } : order);
       G.saveOrders(orders);
       renderOrders();
     }));
+    document.querySelectorAll("[data-delete-order]").forEach(button => button.addEventListener("click", () => {
+      if (!confirm("حذف هذه الطلبية نهائيا؟")) return;
+      orders = orders.filter(order => order.id !== button.dataset.deleteOrder);
+      G.saveOrders(orders);
+      renderOrders();
+      toast("تم حذف الطلبية.");
+    }));
+    $("#clearOrdersBtn")?.addEventListener("click", () => {
+      if (!orders.length) return;
+      if (!confirm("سيتم حذف كل الطلبات السابقة من لوحة التحكم. هل أنت متأكد؟")) return;
+      if (!confirm("تأكيد أخير: الحذف نهائي ولن يمكن استرجاع الطلبات من المتصفح.")) return;
+      orders = [];
+      G.saveOrders(orders);
+      renderOrders();
+      toast("تم حذف كل الطلبات.");
+    });
   }
 
   function renderCoupons() {
