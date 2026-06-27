@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1200">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#dfe4e8"/>
+      <stop offset=".5" stop-color="#6f7d82"/>
+      <stop offset="1" stop-color="#171513"/>
+    </linearGradient>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="3"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="table" tableValues="0 .16"/></feComponentTransfer>
+    </filter>
+  </defs>
+  <rect width="900" height="1200" fill="url(#bg)"/>
+  <rect width="900" height="1200" fill="#fff" opacity=".18" filter="url(#grain)"/>
+  <path d="M136 168h628v874H136z" fill="#fffdfa" opacity=".14"/>
+  <circle cx="450" cy="270" r="96" fill="#161513" opacity=".86"/>
+  <path d="M315 430c74-52 197-54 272 0l68 336c18 91-52 173-144 173H389c-92 0-162-82-144-173z" fill="#161513" opacity=".86"/>
+  <path d="M305 514c88 52 206 54 296 2" fill="none" stroke="#c9a34d" stroke-width="26" opacity=".9"/>
+  <path d="M358 900h184l30 190H328z" fill="#f5f0e6" opacity=".82"/>
+  <path d="M242 710c113-34 304-34 416 0" fill="none" stroke="#fffdfa" stroke-width="16" opacity=".42"/>
+  <text x="162" y="1110" fill="#fffdfa" font-family="Arial Black, Arial" font-size="92" font-style="italic">MEN</text>
+</svg>

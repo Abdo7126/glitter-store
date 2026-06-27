@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1200">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#efe6d1"/>
+      <stop offset=".55" stop-color="#c9a34d"/>
+      <stop offset="1" stop-color="#191716"/>
+    </linearGradient>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="table" tableValues="0 .18"/></feComponentTransfer>
+    </filter>
+  </defs>
+  <rect width="900" height="1200" fill="url(#bg)"/>
+  <rect width="900" height="1200" fill="#fff" opacity=".16" filter="url(#grain)"/>
+  <path d="M120 160h660v880H120z" fill="#fffdfa" opacity=".18"/>
+  <path d="M455 190c-72 0-130 55-130 124 0 48 28 90 70 111-62 48-102 143-102 252 0 161 74 291 166 291s166-130 166-291c0-112-42-209-107-255 41-22 67-63 67-108 0-69-58-124-130-124z" fill="#151412" opacity=".78"/>
+  <path d="M278 640c103-42 252-40 358 2 22 124-48 284-176 284S252 765 278 640z" fill="#f3d886" opacity=".84"/>
+  <path d="M330 504c66 48 178 49 244 2l60 126c-108 50-250 50-360-1z" fill="#fffdfa" opacity=".72"/>
+  <path d="M230 780c130-74 320-74 456 0" fill="none" stroke="#fffdfa" stroke-width="18" opacity=".55"/>
+  <text x="82" y="1110" fill="#fffdfa" font-family="Arial Black, Arial" font-size="88" font-style="italic">WOMEN</text>
+</svg>

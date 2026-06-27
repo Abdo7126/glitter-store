@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1200">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#fff4d8"/>
+      <stop offset=".48" stop-color="#d8b85d"/>
+      <stop offset="1" stop-color="#30423a"/>
+    </linearGradient>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".95" numOctaves="3"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="table" tableValues="0 .14"/></feComponentTransfer>
+    </filter>
+  </defs>
+  <rect width="900" height="1200" fill="url(#bg)"/>
+  <rect width="900" height="1200" fill="#fff" opacity=".18" filter="url(#grain)"/>
+  <path d="M118 170h664v870H118z" fill="#fffdfa" opacity=".15"/>
+  <circle cx="450" cy="285" r="86" fill="#171513" opacity=".82"/>
+  <path d="M314 438c75-56 197-56 272 0l44 285c20 129-52 230-180 230S250 852 270 723z" fill="#171513" opacity=".82"/>
+  <path d="M310 555c96 56 184 56 280 0l32 116c-110 61-235 61-344 0z" fill="#f8f4ec" opacity=".78"/>
+  <path d="M260 756c126 45 254 45 380 0" fill="none" stroke="#c9a34d" stroke-width="24" opacity=".86"/>
+  <circle cx="310" cy="410" r="22" fill="#fffdfa" opacity=".65"/>
+  <circle cx="604" cy="404" r="18" fill="#fffdfa" opacity=".55"/>
+  <text x="140" y="1110" fill="#fffdfa" font-family="Arial Black, Arial" font-size="90" font-style="italic">KIDS</text>
+</svg>
