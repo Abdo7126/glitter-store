@@ -21,7 +21,7 @@
     // Admin settings are saved in localStorage, so they only affect the current browser.
     emailjsEnabled: true,
 emailjsServiceId: "service_26ngd6n",
-emailjsTemplateId: "template_rpzljai",
+emailjsTemplateId: "template_8aa4psh",
 emailjsPublicKey: "BfhTpX14VsvS--cMi",
     visual: {
       heroTitleAr: "Glitter لكل ستايل.",
