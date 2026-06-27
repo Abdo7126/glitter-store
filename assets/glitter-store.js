@@ -76,11 +76,11 @@
           <button class="icon-btn" id="menuClose" type="button">×</button>
         </div>
         <nav class="side-links">
-          <a href="glitter-store.html"><span>${text("الرئيسية", "Home")}</span><b>01</b></a>
-          <a href="glitter-women.html"><span>${text("نساء", "Women")}</span><b>02</b></a>
-          <a href="glitter-men.html"><span>${text("رجال", "Men")}</span><b>03</b></a>
-          <a href="glitter-kids.html"><span>${text("أطفال", "Kids")}</span><b>04</b></a>
-          <a href="glitter-cart.html"><span>${text("السلة والدفع", "Cart & Checkout")}</span><b>05</b></a>
+          <a href="glitter-store.html"><span>${text("الرئيسية", "Home")}</span><b></b></a>
+          <a href="glitter-women.html"><span>${text("نساء", "Women")}</span><b></b></a>
+          <a href="glitter-men.html"><span>${text("رجال", "Men")}</span><b></b></a>
+          <a href="glitter-kids.html"><span>${text("أطفال", "Kids")}</span><b></b></a>
+          <a href="glitter-cart.html"><span>${text("السلة والدفع", "Cart & Checkout")}</span><b></b></a>
         </nav>
         <div>${text("واتساب الدعم", "Support WhatsApp")}: ${escape(settings.supportWhatsApp)}</div>`;
     }
