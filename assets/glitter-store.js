@@ -207,10 +207,11 @@
     const root = $("#categoryRoot");
     if (!root) return;
     const meta = categoryMeta(audience);
+    const sectionPage = settings.visual.sectionPage || {};
     root.innerHTML = `
       <section class="container page-hero">
         <div class="page-card page-title">
-          <span class="eyebrow">Glitter</span>
+          <span class="eyebrow">${escape(text(sectionPage.eyebrowAr || "Glitter", sectionPage.eyebrowEn || "Glitter"))}</span>
           <h1>${escape(text(meta.ar, meta.en))}</h1>
           <p>${escape(text(meta.textAr, meta.textEn))}</p>
         </div>
@@ -218,9 +219,9 @@
       </section>
       <section class="container">
         <div class="toolbar">
-          <div class="field"><label>${text("بحث", "Search")}</label><input id="searchInput" type="search" placeholder="${text("ابحث باسم المنتج", "Search product name")}"></div>
-          <div class="field"><label>${text("القسم", "Category")}</label><select id="categoryFilter"></select></div>
-          <div class="field"><label>${text("الترتيب", "Sort")}</label><select id="sortFilter"><option value="featured">${text("المميز", "Featured")}</option><option value="low">${text("الأقل سعرا", "Lowest")}</option><option value="high">${text("الأعلى سعرا", "Highest")}</option><option value="new">${text("الأحدث", "Newest")}</option></select></div>
+          <div class="field"><label>${escape(text(sectionPage.searchLabelAr || "بحث", sectionPage.searchLabelEn || "Search"))}</label><input id="searchInput" type="search" placeholder="${escape(text(sectionPage.searchPlaceholderAr || "ابحث باسم المنتج", sectionPage.searchPlaceholderEn || "Search product name"))}"></div>
+          <div class="field"><label>${escape(text(sectionPage.filterLabelAr || "القسم", sectionPage.filterLabelEn || "Category"))}</label><select id="categoryFilter"></select></div>
+          <div class="field"><label>${escape(text(sectionPage.sortLabelAr || "الترتيب", sectionPage.sortLabelEn || "Sort"))}</label><select id="sortFilter"><option value="featured">${text("المميز", "Featured")}</option><option value="low">${text("الأقل سعرا", "Lowest")}</option><option value="high">${text("الأعلى سعرا", "Highest")}</option><option value="new">${text("الأحدث", "Newest")}</option></select></div>
         </div>
         <div class="product-grid" id="productGrid"></div>
       </section>`;
@@ -257,7 +258,8 @@
     const grid = $("#productGrid");
     const list = getFilteredProducts();
     if (!list.length) {
-      grid.innerHTML = `<div class="empty">${text("لا توجد منتجات في هذا القسم حاليا.", "No products in this section yet.")}</div>`;
+      const sectionPage = settings.visual.sectionPage || {};
+      grid.innerHTML = `<div class="empty">${escape(text(sectionPage.emptyTextAr || "لا توجد منتجات في هذا القسم حاليا.", sectionPage.emptyTextEn || "No products in this section yet."))}</div>`;
       return;
     }
     grid.innerHTML = list.map((product, index) => {

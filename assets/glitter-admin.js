@@ -10,7 +10,7 @@
   let coupons = G.getCoupons();
   let admins = G.getAdmins();
   let currentAdmin = admins.find(admin => admin.id === localStorage.getItem(G.keys.session));
-  let visualSelection = { type: "hero" };
+  let visualSelection = { page: "home", type: "hero" };
   let workingColors = [];
 
   const COLOR_PRESETS = [
@@ -367,9 +367,25 @@
 
   function renderVisual() {
     $("#adminContent").innerHTML = `<div class="visual-editor">
-      <div class="visual-preview"><div class="mini-preview" id="visualPreview"></div></div>
+      <div class="visual-preview">
+        <div class="admin-toolbar" style="margin:0 0 12px">
+          <div class="field"><label>الصفحة</label><select id="visualPageSelect">
+            <option value="home">الرئيسية</option>
+            <option value="men">رجال</option>
+            <option value="women">نساء</option>
+            <option value="kids">أطفال</option>
+          </select></div>
+        </div>
+        <div class="mini-preview" id="visualPreview"></div>
+      </div>
       <form class="form-panel" id="visualForm"><h2>المحرر</h2><div id="visualFields"></div><button class="gold-btn" type="submit">حفظ التعديل</button></form>
     </div>`;
+    $("#visualPageSelect").value = visualSelection.page || "home";
+    $("#visualPageSelect").addEventListener("change", event => {
+      visualSelection = event.target.value === "home" ? { page: "home", type: "hero" } : { page: event.target.value, type: "sectionHero", id: event.target.value };
+      renderVisualPreview();
+      renderVisualFields();
+    });
     renderVisualPreview();
     renderVisualFields();
     $("#visualForm").addEventListener("submit", saveVisualSelection);
@@ -377,6 +393,11 @@
 
   function renderVisualPreview() {
     const visual = settings.visual;
+    const page = visualSelection.page || "home";
+    if (page !== "home") {
+      renderSectionVisualPreview(page);
+      return;
+    }
     const order = visual.categoryOrder || ["women", "men", "kids"];
     $("#visualPreview").innerHTML = `<section class="home-title editable-block ${visualSelection.type === "hero" ? "selected" : ""}" data-visual="hero">
       <span class="eyebrow">اختر القسم</span><h1><span class="gold-text">${escape(visual.heroTitleAr)}</span></h1><p>${escape(visual.heroTextAr)}</p>
@@ -395,8 +416,37 @@
     }));
   }
 
+  function renderSectionVisualPreview(pageId) {
+    const visual = settings.visual;
+    const meta = visual.categories[pageId] || visual.categories.men;
+    const section = visual.sectionPage || {};
+    const sectionProducts = products.filter(product => (product.audiences || []).includes(pageId)).slice(0, 6);
+    $("#visualPreview").innerHTML = `<section class="page-hero">
+      <div class="page-card page-title editable-block ${visualSelection.type === "sectionHero" ? "selected" : ""}" data-visual="sectionHero" data-id="${pageId}">
+        <span class="eyebrow">${escape(section.eyebrowAr || "Glitter")}</span>
+        <h1>${escape(meta.ar)}</h1>
+        <p>${escape(meta.textAr)}</p>
+      </div>
+      <div class="page-photo editable-block ${visualSelection.type === "sectionHero" ? "selected" : ""}" data-visual="sectionHero" data-id="${pageId}" style="--tile-image:url('${escape(meta.image)}')"></div>
+    </section>
+    <div class="toolbar editable-block ${visualSelection.type === "sectionControls" ? "selected" : ""}" data-visual="sectionControls" data-id="${pageId}">
+      <div class="field"><label>${escape(section.searchLabelAr || "بحث")}</label><input disabled placeholder="${escape(section.searchPlaceholderAr || "ابحث باسم المنتج")}"></div>
+      <div class="field"><label>${escape(section.filterLabelAr || "القسم")}</label><select disabled><option>الكل</option></select></div>
+      <div class="field"><label>${escape(section.sortLabelAr || "الترتيب")}</label><select disabled><option>المميز</option></select></div>
+    </div>
+    <div class="product-grid editable-block ${visualSelection.type === "sectionProducts" ? "selected" : ""}" data-visual="sectionProducts" data-id="${pageId}">
+      ${sectionProducts.map(product => `<article class="product-card in-view" style="--visual-tone:${escape(product.tone || "#d8c082")}"><div class="product-visual">${product.badge ? `<span class="badge">${escape(product.badge)}</span>` : ""}${product.image ? `<img src="${escape(product.image)}" alt="">` : ""}</div><div class="product-body"><div class="product-title"><h3>${escape(product.name)}</h3><small>${escape(product.fabric || "")}</small></div><p class="product-desc">${escape(product.description || "")}</p></div></article>`).join("") || `<div class="empty">${escape(section.emptyTextAr || "لا توجد منتجات في هذا القسم حاليا.")}</div>`}
+    </div>`;
+    document.querySelectorAll("[data-visual]").forEach(block => block.addEventListener("click", () => {
+      visualSelection = { page: pageId, type: block.dataset.visual, id: block.dataset.id };
+      renderVisualPreview();
+      renderVisualFields();
+    }));
+  }
+
   function renderVisualFields() {
     const visual = settings.visual;
+    const page = visualSelection.page || "home";
     if (visualSelection.type === "hero") {
       $("#visualFields").innerHTML = `${textField("heroTitleAr", "عنوان عربي", visual.heroTitleAr)}${textField("heroTitleEn", "عنوان إنجليزي", visual.heroTitleEn)}${areaField("heroTextAr", "وصف عربي", visual.heroTextAr)}${areaField("heroTextEn", "وصف إنجليزي", visual.heroTextEn)}`;
       return;
@@ -405,6 +455,22 @@
       const cat = visual.categories[visualSelection.id];
       $("#visualFields").innerHTML = `${textField("catAr", "اسم عربي", cat.ar)}${textField("catEn", "اسم إنجليزي", cat.en)}${areaField("catTextAr", "وصف عربي", cat.textAr)}${areaField("catTextEn", "وصف إنجليزي", cat.textEn)}${textField("catImage", "رابط/صورة القسم", cat.image)}<div class="field"><label>رفع صورة للقسم</label><input id="catImageFile" type="file" accept="image/*"></div><div class="field"><label>ترتيب الأقسام</label><input id="categoryOrder" value="${visual.categoryOrder.join(", ")}"></div>`;
       $("#catImageFile").addEventListener("change", event => loadFile(event.target.files[0], value => $("#catImage").value = value));
+      return;
+    }
+    if (visualSelection.type === "sectionHero") {
+      const cat = visual.categories[page] || visual.categories.men;
+      $("#visualFields").innerHTML = `<p class="empty compact">هذه البيانات تظهر داخل صفحة القسم نفسها، وتظهر أيضا على كارت القسم في الرئيسية.</p>${textField("catAr", "اسم القسم عربي", cat.ar)}${textField("catEn", "اسم القسم إنجليزي", cat.en)}${areaField("catTextAr", "وصف القسم عربي", cat.textAr)}${areaField("catTextEn", "وصف القسم إنجليزي", cat.textEn)}${textField("catImage", "رابط/صورة القسم", cat.image)}<div class="field"><label>رفع صورة للقسم</label><input id="catImageFile" type="file" accept="image/*"></div>`;
+      $("#catImageFile").addEventListener("change", event => loadFile(event.target.files[0], value => $("#catImage").value = value));
+      return;
+    }
+    if (visualSelection.type === "sectionControls") {
+      const section = visual.sectionPage || {};
+      $("#visualFields").innerHTML = `${textField("sectionEyebrowAr", "النص الصغير عربي", section.eyebrowAr || "Glitter")}${textField("sectionEyebrowEn", "النص الصغير إنجليزي", section.eyebrowEn || "Glitter")}${textField("searchLabelAr", "عنوان البحث عربي", section.searchLabelAr || "بحث")}${textField("searchLabelEn", "عنوان البحث إنجليزي", section.searchLabelEn || "Search")}${textField("searchPlaceholderAr", "Placeholder البحث عربي", section.searchPlaceholderAr || "ابحث باسم المنتج")}${textField("searchPlaceholderEn", "Placeholder البحث إنجليزي", section.searchPlaceholderEn || "Search product name")}${textField("filterLabelAr", "عنوان الفلتر عربي", section.filterLabelAr || "القسم")}${textField("filterLabelEn", "عنوان الفلتر إنجليزي", section.filterLabelEn || "Category")}${textField("sortLabelAr", "عنوان الترتيب عربي", section.sortLabelAr || "الترتيب")}${textField("sortLabelEn", "عنوان الترتيب إنجليزي", section.sortLabelEn || "Sort")}${areaField("emptyTextAr", "رسالة عدم وجود منتجات عربي", section.emptyTextAr || "لا توجد منتجات في هذا القسم حاليا.")}${areaField("emptyTextEn", "رسالة عدم وجود منتجات إنجليزي", section.emptyTextEn || "No products in this section yet.")}`;
+      return;
+    }
+    if (visualSelection.type === "sectionProducts") {
+      const sectionProducts = products.filter(product => (product.audiences || []).includes(page));
+      $("#visualFields").innerHTML = `<p class="empty compact">اكتب IDs منتجات هذا القسم بالترتيب المطلوب. المنتجات غير المكتوبة ستظل بعد القائمة.</p><div class="field"><label>ترتيب منتجات هذا القسم</label><textarea id="sectionProductOrder">${sectionProducts.map(product => product.id).join("\n")}</textarea></div>`;
       return;
     }
     const benefit = visual.benefits[visualSelection.index];
@@ -422,6 +488,7 @@
   function saveVisualSelection(event) {
     event.preventDefault();
     const visual = settings.visual;
+    const page = visualSelection.page || "home";
     if (visualSelection.type === "hero") {
       visual.heroTitleAr = $("#heroTitleAr").value;
       visual.heroTitleEn = $("#heroTitleEn").value;
@@ -435,6 +502,41 @@
       cat.textEn = $("#catTextEn").value;
       cat.image = $("#catImage").value;
       visual.categoryOrder = $("#categoryOrder").value.split(/[\n,،]+/).map(item => item.trim()).filter(Boolean);
+    } else if (visualSelection.type === "sectionHero") {
+      const cat = visual.categories[page] || visual.categories.men;
+      cat.ar = $("#catAr").value;
+      cat.en = $("#catEn").value;
+      cat.textAr = $("#catTextAr").value;
+      cat.textEn = $("#catTextEn").value;
+      cat.image = $("#catImage").value;
+    } else if (visualSelection.type === "sectionControls") {
+      visual.sectionPage = {
+        ...(visual.sectionPage || {}),
+        eyebrowAr: $("#sectionEyebrowAr").value,
+        eyebrowEn: $("#sectionEyebrowEn").value,
+        searchLabelAr: $("#searchLabelAr").value,
+        searchLabelEn: $("#searchLabelEn").value,
+        searchPlaceholderAr: $("#searchPlaceholderAr").value,
+        searchPlaceholderEn: $("#searchPlaceholderEn").value,
+        filterLabelAr: $("#filterLabelAr").value,
+        filterLabelEn: $("#filterLabelEn").value,
+        sortLabelAr: $("#sortLabelAr").value,
+        sortLabelEn: $("#sortLabelEn").value,
+        emptyTextAr: $("#emptyTextAr").value,
+        emptyTextEn: $("#emptyTextEn").value
+      };
+    } else if (visualSelection.type === "sectionProducts") {
+      const ids = $("#sectionProductOrder").value.split(/\n+/).map(id => id.trim()).filter(Boolean);
+      const ranked = new Map(ids.map((id, index) => [id, index]));
+      products.sort((a, b) => {
+        const aInPage = (a.audiences || []).includes(page);
+        const bInPage = (b.audiences || []).includes(page);
+        if (!aInPage || !bInPage) return 0;
+        const aRank = ranked.has(a.id) ? ranked.get(a.id) : Number.MAX_SAFE_INTEGER;
+        const bRank = ranked.has(b.id) ? ranked.get(b.id) : Number.MAX_SAFE_INTEGER;
+        return aRank - bRank;
+      });
+      G.saveProducts(products);
     } else {
       const benefit = visual.benefits[visualSelection.index];
       benefit.arTitle = $("#benefitArTitle").value;

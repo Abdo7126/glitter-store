@@ -52,6 +52,20 @@ emailjsPublicKey: "BfhTpX14VsvS--cMi",
           image: "assets/category-kids.svg"
         }
       },
+      sectionPage: {
+        eyebrowAr: "Glitter",
+        eyebrowEn: "Glitter",
+        searchLabelAr: "بحث",
+        searchLabelEn: "Search",
+        searchPlaceholderAr: "ابحث باسم المنتج",
+        searchPlaceholderEn: "Search product name",
+        filterLabelAr: "القسم",
+        filterLabelEn: "Category",
+        sortLabelAr: "الترتيب",
+        sortLabelEn: "Sort",
+        emptyTextAr: "لا توجد منتجات في هذا القسم حاليا.",
+        emptyTextEn: "No products in this section yet."
+      },
       benefits: [
         { arTitle: "خامات مختارة", arText: "تركيز على الراحة والتشطيب المناسب للبس المتكرر.", enTitle: "Selected Fabrics", enText: "Comfortable materials with clean finishing for repeated wear." },
         { arTitle: "قيمة واضحة", arText: "سعر مناسب مقابل جودة القطعة وقابليتها للتنسيق.", enTitle: "Clear Value", enText: "Fair pricing for quality and easy styling." },
