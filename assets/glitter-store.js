@@ -334,7 +334,7 @@
     const root = $("#cartRoot");
     if (!root) return;
     root.innerHTML = `<section class="container page-hero">
-      <div class="page-card page-title"><span class="eyebrow">Glitter</span><h1>${text("السلة والدفع", "Cart & Checkout")}</h1><p>${text("الدفع المتاح حاليا هو الدفع عند الاستلام. عند إرسال الطلب سيتم تسجيله وفتح واتساب للأدمن، ومع تفعيل EmailJS يتم إرسال إيميل أيضا.", "Cash on delivery is available. Submitting records the order, opens WhatsApp for admin, and sends EmailJS email when enabled.")}</p></div>
+      <div class="page-card page-title"><span class="eyebrow">Glitter</span><h1>${text("السلة والدفع", "Cart & Checkout")}</h1><p>${text("الدفع المتاح حاليا هو الدفع عند الاستلام. عند إرسال الطلب سيتم تسجيله وفتح واتساب لإرسال الطلبية.", "Cash on delivery is available. Submitting records the order, opens WhatsApp for admin, and sends EmailJS email when enabled.")}</p></div>
       <div class="page-photo" style="--tile-image:url('assets/category-women.svg')"></div>
     </section>
     <section class="container admin-two">
