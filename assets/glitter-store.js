@@ -334,7 +334,7 @@
     const root = $("#cartRoot");
     if (!root) return;
     root.innerHTML = `<section class="container page-hero">
-      <div class="page-card page-title"><span class="eyebrow">Glitter</span><h1>${text("السلة والدفع", "Cart & Checkout")}</h1><p>${text("الدفع المتاح حاليا هو الدفع عند الاستلام. عند إرسال الطلب سيتم تسجيله وفتح واتساب لإرسال الطلبية.", "Cash on delivery is available. Submitting records the order, opens WhatsApp for admin, and sends EmailJS email when enabled.")}</p></div>
+      <div class="page-card page-title"><span class="eyebrow">Glitter</span><h1>${text("السلة والدفع", "Cart & Checkout")}</h1><p>${text("الدفع المتاح حاليا هو الدفع عند الاستلام. عند إرسال الطلب سيتم تسجيله وفتح واتساب لإرسال الطلبية.", "Cash on delivery is available. Submitting records the order, opens WhatsApp for admin, To send order details.")}</p></div>
       <div class="page-photo" style="--tile-image:url('assets/category-women.svg')"></div>
     </section>
     <section class="container admin-two">
@@ -450,7 +450,7 @@
       const orderItems = order.items.map(item => `${item.name} | Size: ${item.size} | Color: ${item.color} | Qty: ${item.qty} | ${money(item.price * item.qty)}`).join("\n");
       const replyEmail = settings.supportEmail || "glitterstoreonline7@gmail.com";
       window.emailjs.init({ publicKey: settings.emailjsPublicKey });
-      await window.emailjs.send(settings.emailjsServiceId, settings.emailjsTemplateId, {
+      await sendEmailjs(settings.emailjsServiceId, settings.emailjsTemplateId, {
         name: order.customer.name || "Glitter customer",
         email: replyEmail,
         reply_to: replyEmail,
@@ -475,6 +475,26 @@
     } catch (error) {
       console.error("EmailJS failed", error);
     }
+  }
+
+  async function sendEmailjs(serviceId, templateId, params) {
+    try {
+      return await window.emailjs.send(serviceId, templateId, params);
+    } catch (error) {
+      const alternate = alternateTemplateId(templateId);
+      const text = String(error?.text || error?.message || error).toLowerCase();
+      if (alternate && (text.includes("template") || text.includes("not found"))) {
+        console.warn(`EmailJS retrying with alternate template ID: ${alternate}`);
+        return window.emailjs.send(serviceId, alternate, params);
+      }
+      throw error;
+    }
+  }
+
+  function alternateTemplateId(templateId) {
+    const id = String(templateId || "").trim();
+    if (!id) return "";
+    return id.startsWith("template_") ? id.replace(/^template_/, "") : `template_${id}`;
   }
 
   function whatsappUrl(phone, message) {

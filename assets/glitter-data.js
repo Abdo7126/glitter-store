@@ -20,9 +20,9 @@
     // For GitHub Pages, fill these values before uploading so every visitor can send order emails.
     // Admin settings are saved in localStorage, so they only affect the current browser.
     emailjsEnabled: true,
-emailjsServiceId: "service_26ngd6n",
-emailjsTemplateId: "template_iwbybdw",
-emailjsPublicKey: "BfhTpX14VsvS--cMi",
+    emailjsServiceId: "service_26ngd6n",
+    emailjsTemplateId: "template_iwbybdw",
+    emailjsPublicKey: "BfhTpX14VsvS--cMi",
     visual: {
       heroTitleAr: "Glitter لكل ستايل.",
       heroTitleEn: "Glitter for every style.",
@@ -261,6 +261,7 @@ emailjsPublicKey: "BfhTpX14VsvS--cMi",
     if (!settings.emailjsEnabled && defaultSettings.emailjsEnabled) settings.emailjsEnabled = true;
     if (!settings.emailjsServiceId && defaultSettings.emailjsServiceId) settings.emailjsServiceId = defaultSettings.emailjsServiceId;
     if (!settings.emailjsTemplateId && defaultSettings.emailjsTemplateId) settings.emailjsTemplateId = defaultSettings.emailjsTemplateId;
+    if (["template_rpzljai", "rpzljai"].includes(settings.emailjsTemplateId) && defaultSettings.emailjsTemplateId) settings.emailjsTemplateId = defaultSettings.emailjsTemplateId;
     if (!settings.emailjsPublicKey && defaultSettings.emailjsPublicKey) settings.emailjsPublicKey = defaultSettings.emailjsPublicKey;
     write(keys.settings, settings);
     migrateProducts(read(keys.products, defaultProducts));

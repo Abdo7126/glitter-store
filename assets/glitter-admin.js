@@ -676,7 +676,7 @@
     }
     try {
       window.emailjs.init({ publicKey });
-      await window.emailjs.send(serviceId, templateId, {
+      await sendEmailjs(serviceId, templateId, {
         name: "Glitter Test",
         email: supportEmail,
         reply_to: supportEmail,
@@ -703,6 +703,26 @@
       console.error("EmailJS test failed", error);
       toast(`فشل اختبار EmailJS: ${error?.text || error?.message || "راجع Console"}`);
     }
+  }
+
+  async function sendEmailjs(serviceId, templateId, params) {
+    try {
+      return await window.emailjs.send(serviceId, templateId, params);
+    } catch (error) {
+      const alternate = alternateTemplateId(templateId);
+      const text = String(error?.text || error?.message || error).toLowerCase();
+      if (alternate && (text.includes("template") || text.includes("not found"))) {
+        console.warn(`EmailJS retrying with alternate template ID: ${alternate}`);
+        return window.emailjs.send(serviceId, alternate, params);
+      }
+      throw error;
+    }
+  }
+
+  function alternateTemplateId(templateId) {
+    const id = String(templateId || "").trim();
+    if (!id) return "";
+    return id.startsWith("template_") ? id.replace(/^template_/, "") : `template_${id}`;
   }
 
   function renderInvoice() {
