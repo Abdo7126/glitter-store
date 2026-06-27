@@ -17,10 +17,12 @@
     adminWhatsApp: "201287737602",
     supportWhatsApp: "201287737602",
     supportEmail: "glitterstoreonline7@gmail.com",
-    emailjsEnabled: false,
-    emailjsServiceId: "",
-    emailjsTemplateId: "",
-    emailjsPublicKey: "",
+    // For GitHub Pages, fill these values before uploading so every visitor can send order emails.
+    // Admin settings are saved in localStorage, so they only affect the current browser.
+    emailjsEnabled: true,
+emailjsServiceId: "service_26ngd6n",
+emailjsTemplateId: "template_rpzljai",
+emailjsPublicKey: "BfhTpX14VsvS--cMi",
     visual: {
       heroTitleAr: "Glitter لكل ستايل.",
       heroTitleEn: "Glitter for every style.",
@@ -242,6 +244,10 @@
     if (settings.adminWhatsApp === "201000000000") settings.adminWhatsApp = defaultSettings.adminWhatsApp;
     if (settings.supportWhatsApp === "201000000000") settings.supportWhatsApp = defaultSettings.supportWhatsApp;
     if (settings.supportEmail === "support@glitter.eg") settings.supportEmail = defaultSettings.supportEmail;
+    if (!settings.emailjsEnabled && defaultSettings.emailjsEnabled) settings.emailjsEnabled = true;
+    if (!settings.emailjsServiceId && defaultSettings.emailjsServiceId) settings.emailjsServiceId = defaultSettings.emailjsServiceId;
+    if (!settings.emailjsTemplateId && defaultSettings.emailjsTemplateId) settings.emailjsTemplateId = defaultSettings.emailjsTemplateId;
+    if (!settings.emailjsPublicKey && defaultSettings.emailjsPublicKey) settings.emailjsPublicKey = defaultSettings.emailjsPublicKey;
     write(keys.settings, settings);
     migrateProducts(read(keys.products, defaultProducts));
   }

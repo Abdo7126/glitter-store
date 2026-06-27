@@ -533,8 +533,12 @@
         ${textField("emailjsTemplateId", "EmailJS Template ID", settings.emailjsTemplateId)}
         ${textField("emailjsPublicKey", "EmailJS Public Key", settings.emailjsPublicKey)}
       </div>
-      <button class="gold-btn">حفظ الإعدادات</button>
+      <div class="actions-row" style="margin-top:14px">
+        <button class="gold-btn" type="submit">حفظ الإعدادات</button>
+        <button class="btn" id="testEmailjsBtn" type="button">اختبار EmailJS</button>
+      </div>
     </form>`;
+    $("#testEmailjsBtn").addEventListener("click", testEmailjsSettings);
     $("#settingsForm").addEventListener("submit", event => {
       event.preventDefault();
       settings = {
@@ -552,6 +556,51 @@
       G.saveSettings(settings);
       toast("تم حفظ الإعدادات.");
     });
+  }
+
+  async function testEmailjsSettings() {
+    const serviceId = $("#emailjsServiceId").value.trim();
+    const templateId = $("#emailjsTemplateId").value.trim();
+    const publicKey = $("#emailjsPublicKey").value.trim();
+    const supportEmail = $("#supportEmail").value.trim() || "glitterstoreonline7@gmail.com";
+    const missing = [];
+    if (!window.emailjs) missing.push("EmailJS script");
+    if (!serviceId) missing.push("Service ID");
+    if (!templateId) missing.push("Template ID");
+    if (!publicKey) missing.push("Public Key");
+    if (missing.length) {
+      toast(`بيانات ناقصة: ${missing.join(", ")}`);
+      return;
+    }
+    try {
+      window.emailjs.init({ publicKey });
+      await window.emailjs.send(serviceId, templateId, {
+        name: "Glitter Test",
+        email: supportEmail,
+        reply_to: supportEmail,
+        time: new Date().toLocaleString("ar-EG"),
+        to_email: supportEmail,
+        admin_email: supportEmail,
+        store_name: $("#storeName").value || "Glitter",
+        order_id: `TEST-${Date.now().toString().slice(-6)}`,
+        customer_name: "Test Customer",
+        customer_phone: "01000000000",
+        customer_city: "Test City",
+        customer_area: "Test Area",
+        customer_address: "Test City - Test Area - Test Address",
+        customer_notes: "EmailJS settings test from admin page.",
+        order_items: "Test Product | Size: M | Color: Black | Qty: 1 | 100 ج.م",
+        order_subtotal: "100 ج.م",
+        order_shipping: "0 ج.م",
+        order_total: "100 ج.م",
+        payment_method: "Cash on delivery",
+        message: "This is a test message from Glitter admin settings."
+      });
+      toast("تم إرسال اختبار EmailJS بنجاح.");
+    } catch (error) {
+      console.error("EmailJS test failed", error);
+      toast(`فشل اختبار EmailJS: ${error?.text || error?.message || "راجع Console"}`);
+    }
   }
 
   function renderInvoice() {

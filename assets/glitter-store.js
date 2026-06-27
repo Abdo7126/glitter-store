@@ -433,20 +433,41 @@
   }
 
   async function notifyEmail(order, message) {
-    const ready = settings.emailjsEnabled && settings.emailjsServiceId && settings.emailjsTemplateId && settings.emailjsPublicKey && window.emailjs;
-    if (!ready) return;
+    if (!settings.emailjsEnabled) return;
+    const missing = [];
+    if (!settings.emailjsServiceId) missing.push("Service ID");
+    if (!settings.emailjsTemplateId) missing.push("Template ID");
+    if (!settings.emailjsPublicKey) missing.push("Public Key");
+    if (!window.emailjs) missing.push("EmailJS script");
+    if (missing.length) {
+      console.warn(`EmailJS skipped. Missing: ${missing.join(", ")}`);
+      return;
+    }
     try {
+      const customerAddress = `${order.customer.city} - ${order.customer.area} - ${order.customer.address}`;
+      const orderItems = order.items.map(item => `${item.name} | Size: ${item.size} | Color: ${item.color} | Qty: ${item.qty} | ${money(item.price * item.qty)}`).join("\n");
+      const replyEmail = settings.supportEmail || "glitterstoreonline7@gmail.com";
       window.emailjs.init({ publicKey: settings.emailjsPublicKey });
       await window.emailjs.send(settings.emailjsServiceId, settings.emailjsTemplateId, {
+        name: order.customer.name || "Glitter customer",
+        email: replyEmail,
+        reply_to: replyEmail,
+        time: new Date(order.createdAt).toLocaleString(isAr() ? "ar-EG" : "en-US"),
         to_email: settings.supportEmail,
         admin_email: settings.supportEmail,
         store_name: settings.storeName,
         order_id: order.id,
         customer_name: order.customer.name,
         customer_phone: order.customer.phone,
-        customer_address: `${order.customer.city} - ${order.customer.area} - ${order.customer.address}`,
-        order_items: order.items.map(item => `${item.name} x${item.qty}`).join("\n"),
+        customer_city: order.customer.city,
+        customer_area: order.customer.area,
+        customer_address: customerAddress,
+        customer_notes: order.customer.notes || "",
+        order_items: orderItems,
+        order_subtotal: money(order.subtotal),
+        order_shipping: money(order.shipping),
         order_total: money(order.total),
+        payment_method: order.paymentMethod,
         message
       });
     } catch (error) {
