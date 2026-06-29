@@ -27,6 +27,11 @@
 
   function escape(value) { return G.escapeHtml(value); }
   function money(value) { return G.money(value); }
+  function cssImage(value) {
+    const raw = String(value || "");
+    const normalized = raw.startsWith("assets/") ? `/${raw}` : raw;
+    return `url('${escape(normalized)}')`;
+  }
 
   function categoryMeta(id) {
     return settings.visual.categories[id] || settings.visual.categories.men;
@@ -141,7 +146,7 @@
         <div class="category-tiles">
           ${order.map(id => {
             const meta = categoryMeta(id);
-            return `<a class="category-tile" href="${pageHref(id)}" style="--tile-image:url('${escape(meta.image)}')">
+            return `<a class="category-tile" href="${pageHref(id)}" style="--tile-image:${cssImage(meta.image)}">
               <small>${text("اذهب إلى القسم", "Go to fashion")}</small>
               <strong>${escape(text(meta.ar, meta.en))}</strong>
               <span>${escape(text(meta.textAr, meta.textEn))}</span>
@@ -161,7 +166,7 @@
         <h1>${text("اختيار أسهل وطلب أوضح.", "Easier choice, clearer order.")}</h1>
         <p>${text("كل منتج له تفاصيله الخاصة من خامة ومقاسات وألوان. افتح المنتج، راجع التفاصيل، ثم أضفه للسلة وكمّل الطلب بالدفع عند الاستلام.", "Each product has its own fabric, sizing, and colors. Open the product, review the details, add it to cart, and complete with cash on delivery.")}</p>
       </div>
-      <div class="page-photo" style="--tile-image:url('assets/category-kids.svg')"></div>
+      <div class="page-photo" style="--tile-image:${cssImage("assets/category-kids.svg")}"></div>
     </section>`;
   }
 
@@ -195,7 +200,7 @@
         <h1>${text("تجربة واضحة من أول اختيار.", "A clear experience from the first choice.")}</h1>
         <p>${text("هنا بنركز على ما يهمك كعميل: الخامة، المقاس الخاص بكل منتج، السعر مقابل الجودة، وطريقة تأكيد الطلب.", "We focus on what matters: fabric, product-specific sizing, value for money, and order confirmation.")}</p>
       </div>
-      <div class="page-photo" style="--tile-image:url('assets/category-men.svg')"></div>
+      <div class="page-photo" style="--tile-image:${cssImage("assets/category-men.svg")}"></div>
     </section>${renderBenefits()}`;
   }
 
@@ -215,7 +220,7 @@
           <h1>${escape(text(meta.ar, meta.en))}</h1>
           <p>${escape(text(meta.textAr, meta.textEn))}</p>
         </div>
-        <div class="page-photo" style="--tile-image:url('${escape(meta.image)}')"></div>
+        <div class="page-photo" style="--tile-image:${cssImage(meta.image)}"></div>
       </section>
       <section class="container">
         <div class="toolbar">
@@ -335,7 +340,7 @@
     if (!root) return;
     root.innerHTML = `<section class="container page-hero">
       <div class="page-card page-title"><span class="eyebrow">Glitter</span><h1>${text("السلة والدفع", "Cart & Checkout")}</h1><p>${text("الدفع المتاح حاليا هو الدفع عند الاستلام. عند إرسال الطلب سيتم تسجيله وفتح واتساب لإرسال الطلبية.", "Cash on delivery is available. Submitting records the order, opens WhatsApp for admin, To send order details.")}</p></div>
-      <div class="page-photo" style="--tile-image:url('assets/category-women.svg')"></div>
+      <div class="page-photo" style="--tile-image:${cssImage("assets/category-women.svg")}"></div>
     </section>
     <section class="container admin-two">
       <div><div class="cart-list" id="cartList"></div><div class="summary" id="cartSummary"></div></div>

@@ -35,21 +35,21 @@
           en: "Women",
           textAr: "قصات عصرية وخامات مريحة لإطلالات يومية وخروج.",
           textEn: "Modern cuts and comfortable fabrics for everyday looks.",
-          image: "assets/category-women.svg"
+          image: "/assets/category-women.svg"
         },
         men: {
           ar: "رجال",
           en: "Men",
           textAr: "قطع كاجوال نظيفة وتفاصيل ذهبية هادئة.",
           textEn: "Clean casual pieces with subtle gold details.",
-          image: "assets/category-men.svg"
+          image: "/assets/category-men.svg"
         },
         kids: {
           ar: "أطفال",
           en: "Kids",
           textAr: "راحة وحركة وخامات مناسبة للأطفال.",
           textEn: "Comfort, movement, and kid-friendly fabrics.",
-          image: "assets/category-kids.svg"
+          image: "/assets/category-kids.svg"
         }
       },
       sectionPage: {
@@ -248,6 +248,17 @@
     return cleaned;
   }
 
+  function normalizeVisualAssets(settings) {
+    const categories = settings?.visual?.categories || {};
+    Object.keys(categories).forEach(key => {
+      const image = categories[key]?.image;
+      if (typeof image === "string" && image.startsWith("assets/")) {
+        categories[key].image = `/${image}`;
+      }
+    });
+    return settings;
+  }
+
   function seed() {
     if (!localStorage.getItem(keys.products)) write(keys.products, defaultProducts);
     if (!localStorage.getItem(keys.coupons)) write(keys.coupons, defaultCoupons);
@@ -263,7 +274,7 @@
     if (!settings.emailjsTemplateId && defaultSettings.emailjsTemplateId) settings.emailjsTemplateId = defaultSettings.emailjsTemplateId;
     if (["template_rpzljai", "rpzljai"].includes(settings.emailjsTemplateId) && defaultSettings.emailjsTemplateId) settings.emailjsTemplateId = defaultSettings.emailjsTemplateId;
     if (!settings.emailjsPublicKey && defaultSettings.emailjsPublicKey) settings.emailjsPublicKey = defaultSettings.emailjsPublicKey;
-    write(keys.settings, settings);
+    write(keys.settings, normalizeVisualAssets(settings));
     migrateProducts(read(keys.products, defaultProducts));
   }
 

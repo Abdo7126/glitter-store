@@ -36,6 +36,11 @@
 
   function escape(value) { return G.escapeHtml(value); }
   function money(value) { return G.money(value); }
+  function cssImage(value) {
+    const raw = String(value || "");
+    const normalized = raw.startsWith("assets/") ? `/${raw}` : raw;
+    return `url('${escape(normalized)}')`;
+  }
   function toast(message) {
     const el = $("#toast");
     if (!el) return;
@@ -405,7 +410,7 @@
     <div class="category-tiles" style="margin-top:18px">
       ${order.map(id => {
         const cat = visual.categories[id];
-        return `<div class="category-tile editable-block ${visualSelection.type === "category" && visualSelection.id === id ? "selected" : ""}" data-visual="category" data-id="${id}" style="--tile-image:url('${escape(cat.image)}')"><small>GO TO FASHION</small><strong>${escape(cat.ar)}</strong><span>${escape(cat.textAr)}</span></div>`;
+        return `<div class="category-tile editable-block ${visualSelection.type === "category" && visualSelection.id === id ? "selected" : ""}" data-visual="category" data-id="${id}" style="--tile-image:${cssImage(cat.image)}"><small>GO TO FASHION</small><strong>${escape(cat.ar)}</strong><span>${escape(cat.textAr)}</span></div>`;
       }).join("")}
     </div>
     <div class="info-grid">${(visual.benefits || []).map((item, index) => `<article class="panel info-card editable-block ${visualSelection.type === "benefit" && visualSelection.index === index ? "selected" : ""}" data-visual="benefit" data-index="${index}"><b>${String(index + 1).padStart(2, "0")}</b><h3>${escape(item.arTitle)}</h3><p>${escape(item.arText)}</p></article>`).join("")}</div>`;
@@ -427,7 +432,7 @@
         <h1>${escape(meta.ar)}</h1>
         <p>${escape(meta.textAr)}</p>
       </div>
-      <div class="page-photo editable-block ${visualSelection.type === "sectionHero" ? "selected" : ""}" data-visual="sectionHero" data-id="${pageId}" style="--tile-image:url('${escape(meta.image)}')"></div>
+      <div class="page-photo editable-block ${visualSelection.type === "sectionHero" ? "selected" : ""}" data-visual="sectionHero" data-id="${pageId}" style="--tile-image:${cssImage(meta.image)}"></div>
     </section>
     <div class="toolbar editable-block ${visualSelection.type === "sectionControls" ? "selected" : ""}" data-visual="sectionControls" data-id="${pageId}">
       <div class="field"><label>${escape(section.searchLabelAr || "بحث")}</label><input disabled placeholder="${escape(section.searchPlaceholderAr || "ابحث باسم المنتج")}"></div>
