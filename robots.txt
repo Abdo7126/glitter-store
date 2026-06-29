@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /glitter-admin.html
+Disallow: /glitter-admin-dashboard.html
+Disallow: /glitter-admin-products.html
+Disallow: /glitter-admin-visual.html
+Disallow: /glitter-admin-orders.html
+Disallow: /glitter-admin-coupons.html
+Disallow: /glitter-admin-motion.html
+Disallow: /glitter-admin-settings.html
+Disallow: /glitter-admin-invoice.html
+Disallow: /glitter-admin-managers.html
+
+Sitemap: https://glitterstore.online/sitemap.xml
