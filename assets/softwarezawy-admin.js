@@ -313,6 +313,49 @@ function szEscapeHtml(value) {
   })[char]);
 }
 
+function szBooleanSettingValue(value) {
+  return value === true || value === "true";
+}
+
+function szExtractMetaPixelId(value) {
+  const text = String(value ?? "").trim();
+  if (/^\d{6,}$/.test(text)) return text;
+  return text.match(/\b\d{6,}\b/)?.[0] || "";
+}
+
+function szRenderSettingField(key, value) {
+  const safeKey = szEscapeHtml(key);
+  const safeValue = szEscapeHtml(value);
+  if (key === "emailjsEnabled" || key === "metaPixelEnabled") {
+    const enabled = szBooleanSettingValue(value);
+    return `
+      <label>${safeKey}
+        <select name="${safeKey}">
+          <option value="true" ${enabled ? "selected" : ""}>true</option>
+          <option value="false" ${enabled ? "" : "selected"}>false</option>
+        </select>
+      </label>
+    `;
+  }
+  if (key === "metaPixelId") {
+    return `
+      <label class="full">${safeKey}
+        <input name="${safeKey}" value="${safeValue}" inputmode="numeric" placeholder="مثال: 1755088885498975">
+        <small>اكتب رقم Meta Pixel فقط، وليس كود البيكسل الكامل.</small>
+      </label>
+    `;
+  }
+  return `<label>${safeKey}<input name="${safeKey}" value="${safeValue}"></label>`;
+}
+
+function szReadSettingsForm(form) {
+  const data = Object.fromEntries(new FormData(form));
+  data.emailjsEnabled = data.emailjsEnabled === "true";
+  data.metaPixelEnabled = data.metaPixelEnabled === "true";
+  data.metaPixelId = szExtractMetaPixelId(data.metaPixelId);
+  return { ...szGetSettings(), ...data };
+}
+
 function szOrderStatusLabel(status) {
   const labels = {
     new: "جديد",
@@ -798,12 +841,12 @@ function szRenderVisualAdmin() {
 function szRenderSettingsAdmin() {
   szAdminShell("settings");
   const main = document.querySelector("[data-admin-main]");
-  const settings = szGetSettings();
+  const settings = { ...SOFTWAREZAWY_DEFAULTS.settings, ...szGetSettings() };
   main.innerHTML = `
     <p class="eyebrow">Settings</p><h1>الإعدادات العامة</h1>
     <div class="notice" style="margin-bottom:18px">لإعلانات فيسبوك: فعّل metaPixelEnabled واكتب رقم Meta Pixel في metaPixelId. الدومين الأساسي مضبوط على softwarezawy.shop.</div>
     <form class="form-panel form-grid" data-settings-form>
-      ${Object.entries(settings).map(([key, value]) => `<label>${key}<input name="${key}" value="${value}"></label>`).join("")}
+      ${Object.entries(settings).map(([key, value]) => szRenderSettingField(key, value)).join("")}
       <button class="btn primary full" type="submit">حفظ الإعدادات</button>
       <button class="btn ghost full" type="button" data-test-emailjs>اختبار EmailJS</button>
       <button class="btn ghost full" type="button" data-test-pixel>اختبار Meta Pixel</button>
@@ -811,19 +854,20 @@ function szRenderSettingsAdmin() {
   `;
   document.querySelector("[data-settings-form]").addEventListener("submit", (event) => {
     event.preventDefault();
-    szWrite(SZ_KEYS.settings, Object.fromEntries(new FormData(event.target)));
+    szWrite(SZ_KEYS.settings, szReadSettingsForm(event.target));
     alert("تم حفظ الإعدادات.");
+    szRenderSettingsAdmin();
   });
   document.querySelector("[data-test-emailjs]").addEventListener("click", () => {
     alert("ضع مفاتيح EmailJS ثم اربط مكتبة EmailJS في الموقع عند الرفع الفعلي.");
   });
   document.querySelector("[data-test-pixel]").addEventListener("click", () => {
     const latest = szGetSettings();
-    if (!latest.metaPixelEnabled || !latest.metaPixelId) {
+    if (!szBooleanSettingValue(latest.metaPixelEnabled) || !latest.metaPixelId) {
       alert("فعّل metaPixelEnabled واكتب metaPixelId ثم احفظ الإعدادات أولا.");
       return;
     }
-    alert("تم تجهيز Meta Pixel. افتح الموقع بعد الحفظ، ثم افحصه من Meta Events Manager أو Pixel Helper.");
+    alert(`تم تجهيز Meta Pixel رقم ${latest.metaPixelId}. افتح الموقع بعد الحفظ، ثم افحصه من Meta Events Manager أو Pixel Helper.`);
   });
 }
 

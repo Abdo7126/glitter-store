@@ -97,7 +97,8 @@ function szBindMotionTracking() {
 
 function szInitMetaPixel() {
   const settings = szGetSettings();
-  const id = String(settings.metaPixelId || "").trim();
+  const rawId = String(settings.metaPixelId || "").trim();
+  const id = /^\d{6,}$/.test(rawId) ? rawId : rawId.match(/\b\d{6,}\b/)?.[0] || "";
   const enabled = settings.metaPixelEnabled === true || settings.metaPixelEnabled === "true";
   if (!enabled || !id || window.fbq) return;
   const script = document.createElement("script");
