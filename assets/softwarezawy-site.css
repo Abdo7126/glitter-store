@@ -106,17 +106,25 @@ img {
   align-items: center;
   gap: 10px;
   min-width: 0;
+  min-height: 52px;
 }
 
 .brand img {
-  width: 46px;
-  height: 46px;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  padding: 4px;
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--line));
+  border-radius: 8px;
+  background: #071017;
   object-fit: contain;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .16);
 }
 
 .brand-copy,
 .login-brand span {
   display: grid;
+  align-content: center;
   gap: 2px;
   min-width: 0;
   line-height: 1.05;
@@ -1517,6 +1525,7 @@ td {
   .brand img {
     width: 42px;
     height: 42px;
+    flex-basis: 42px;
   }
 
   .brand-copy strong {

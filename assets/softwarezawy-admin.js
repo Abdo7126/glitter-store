@@ -16,7 +16,7 @@ function szAdminShell(active) {
   root.innerHTML = `
     <aside class="admin-sidebar">
       <a class="brand" href="softwarezawy-admin-dashboard.html">
-        <img src="assets/softwarezawy-mark.svg" alt="SoftwareZawy">
+        <img src="assets/softwarezawy-mark.svg" width="44" height="44" alt="" aria-hidden="true">
         <span class="brand-copy"><strong>SoftwareZawy</strong><small>Admin panel</small></span>
       </a>
       <nav>

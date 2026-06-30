@@ -319,6 +319,7 @@ function szEnsureSiteIcon() {
     const icon = document.createElement("link");
     icon.rel = "icon";
     icon.type = "image/svg+xml";
+    icon.sizes = "any";
     icon.href = "assets/softwarezawy-mark.svg";
     document.head.appendChild(icon);
   }

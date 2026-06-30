@@ -9,7 +9,7 @@ function szMountHeader() {
   header.innerHTML = `
     <div class="header-inner">
       <a class="brand" href="index.html" aria-label="${settings.brandName}">
-        <img src="assets/softwarezawy-mark.svg" alt="${settings.brandName}">
+        <img src="assets/softwarezawy-mark.svg" width="44" height="44" alt="" aria-hidden="true">
         <span class="brand-copy">
           <strong>${settings.brandName}</strong>
           <small>${szT("اشتراكات AI", "AI subscriptions")}</small>
