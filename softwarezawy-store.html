@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>كل اشتراكات AI | SoftwareZawy</title>
+  <meta name="description" content="تصفح اشتراكات AI المتاحة من SoftwareZawy حسب القسم وابحث عن الخطة المناسبة.">
+  <link rel="canonical" href="https://softwarezawy.shop/softwarezawy-store.html">
+  <link rel="stylesheet" href="assets/softwarezawy-site.css">
+  <script src="assets/softwarezawy-data.js" defer></script>
+  <script src="assets/softwarezawy-store.js" defer></script>
+</head>
+<body>
+  <header class="site-header" data-header></header>
+  <div class="drawer" data-drawer></div>
+  <main class="page-shell">
+    <section>
+      <p class="eyebrow">Subscriptions</p>
+      <h1>كل اشتراكات AI</h1>
+      <p class="lead">ابحث حسب الأداة أو القسم، وأضف الاشتراك للسلة لإرسال طلبك عبر واتساب.</p>
+      <div class="toolbar">
+        <label class="field">
+          بحث
+          <input data-search type="search" placeholder="ChatGPT, Canva, Midjourney">
+        </label>
+        <label class="field">
+          القسم
+          <select data-section-filter></select>
+        </label>
+      </div>
+      <div class="products-grid" data-store-products></div>
+    </section>
+  </main>
+  <footer class="site-footer"><div class="footer-inner"><span>SoftwareZawy</span><a href="softwarezawy-info.html">الدعم</a></div></footer>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => szRenderStorePage());
+  </script>
+</body>
+</html>
