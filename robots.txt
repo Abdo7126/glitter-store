@@ -1,14 +1,14 @@
 User-agent: *
 Allow: /
-Disallow: /softwarezawy-cart.html
-Disallow: /softwarezawy-admin.html
-Disallow: /softwarezawy-admin-dashboard.html
-Disallow: /softwarezawy-admin-products.html
-Disallow: /softwarezawy-admin-visual.html
-Disallow: /softwarezawy-admin-orders.html
-Disallow: /softwarezawy-admin-coupons.html
-Disallow: /softwarezawy-admin-settings.html
-Disallow: /softwarezawy-admin-invoice.html
-Disallow: /softwarezawy-admin-managers.html
+Disallow: /glitter-admin.html
+Disallow: /glitter-admin-dashboard.html
+Disallow: /glitter-admin-products.html
+Disallow: /glitter-admin-visual.html
+Disallow: /glitter-admin-orders.html
+Disallow: /glitter-admin-coupons.html
+Disallow: /glitter-admin-motion.html
+Disallow: /glitter-admin-settings.html
+Disallow: /glitter-admin-invoice.html
+Disallow: /glitter-admin-managers.html
 
-Sitemap: https://softwarezawy.shop/sitemap.xml
+Sitemap: https://glitterstore.online/sitemap.xml
