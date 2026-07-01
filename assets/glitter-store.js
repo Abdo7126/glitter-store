@@ -413,6 +413,11 @@
     const orders = G.getOrders();
     orders.unshift(order);
     G.saveOrders(orders);
+    try {
+      await G.createCloudOrder(order);
+    } catch (error) {
+      console.warn("Glitter cloud order sync failed:", error);
+    }
     const message = buildOrderMessage(order);
     await notifyEmail(order, message);
     G.saveCart([]);
@@ -516,9 +521,18 @@
     window.glitterToastTimer = setTimeout(() => el.classList.remove("show"), 2600);
   }
 
-  setupPrefs();
-  renderChrome();
-  renderHome();
-  renderCategoryPage();
-  renderCartPage();
+  function refreshPage() {
+    settings = G.getSettings();
+    products = G.getProducts();
+    cart = G.getCart();
+    setupPrefs();
+    renderChrome();
+    renderHome();
+    renderInfo();
+    renderCategoryPage();
+    renderCartPage();
+  }
+
+  document.addEventListener("glitter:sync-updated", refreshPage);
+  G.onReady(refreshPage);
 })();

@@ -50,6 +50,15 @@
     window.glitterAdminToast = setTimeout(() => el.classList.remove("show"), 2600);
   }
 
+  function refreshState() {
+    settings = G.getSettings();
+    products = G.getProducts();
+    orders = G.getOrders();
+    coupons = G.getCoupons();
+    admins = G.getAdmins();
+    currentAdmin = admins.find(admin => admin.id === localStorage.getItem(G.keys.session));
+  }
+
   function requireAuth() {
     if (page === "login") return true;
     if (!currentAdmin) {
@@ -628,6 +637,7 @@
   }
 
   function renderSettings() {
+    const syncConfig = G.getSyncConfig();
     $("#adminContent").innerHTML = `<form class="form-panel" id="settingsForm">
       <div class="form-grid">
         ${textField("storeName", "اسم المتجر", settings.storeName)}
@@ -643,6 +653,21 @@
       <div class="actions-row" style="margin-top:14px">
         <button class="gold-btn" type="submit">حفظ الإعدادات</button>
         <button class="btn" id="testEmailjsBtn" type="button">اختبار EmailJS</button>
+      </div>
+    </form>
+    <form class="form-panel" id="syncForm" style="margin-top:14px">
+      <h2>مزامنة الأجهزة</h2>
+      <p class="empty compact">ضع رابط Apps Script والتوكن مرة واحدة. الزوار يسحبون المنتجات تلقائيا من السحابة، والأدمن يرفع التعديلات عند الحفظ.</p>
+      <div class="form-grid">
+        <label class="field"><input id="syncEnabled" type="checkbox" ${syncConfig.enabled ? "checked" : ""}> تفعيل المزامنة</label>
+        ${textField("syncEndpoint", "رابط Apps Script", syncConfig.endpoint)}
+        ${textField("syncToken", "توكن الأدمن", syncConfig.token)}
+        ${textField("syncTimeout", "مهلة الاتصال ms", syncConfig.timeoutMs)}
+      </div>
+      <div class="actions-row" style="margin-top:14px">
+        <button class="gold-btn" type="submit">حفظ المزامنة</button>
+        <button class="btn" id="pullCloudBtn" type="button">سحب البيانات من السحابة</button>
+        <button class="btn" id="pushCloudBtn" type="button">رفع بيانات هذا الجهاز</button>
       </div>
     </form>`;
     $("#testEmailjsBtn").addEventListener("click", testEmailjsSettings);
@@ -662,6 +687,34 @@
       };
       G.saveSettings(settings);
       toast("تم حفظ الإعدادات.");
+    });
+    const collectSyncConfig = () => ({
+      ...G.getSyncConfig(),
+      enabled: $("#syncEnabled").checked,
+      endpoint: $("#syncEndpoint").value,
+      token: $("#syncToken").value,
+      timeoutMs: Number($("#syncTimeout").value || 4500)
+    });
+    $("#syncForm").addEventListener("submit", event => {
+      event.preventDefault();
+      G.saveSyncConfig(collectSyncConfig());
+      toast("تم حفظ إعدادات المزامنة.");
+    });
+    $("#pullCloudBtn").addEventListener("click", async () => {
+      G.saveSyncConfig(collectSyncConfig());
+      const result = await G.pullCloudSync({ admin: Boolean($("#syncToken").value.trim()) });
+      refreshState();
+      renderSettings();
+      toast(result.ok ? "تم سحب البيانات من السحابة." : `فشل سحب البيانات: ${result.error || "راجع الرابط والتوكن"}`);
+    });
+    $("#pushCloudBtn").addEventListener("click", async () => {
+      try {
+        G.saveSyncConfig(collectSyncConfig());
+        await G.pushCloudSnapshot();
+        toast("تم رفع بيانات هذا الجهاز للسحابة.");
+      } catch (error) {
+        toast(`فشل رفع البيانات: ${error?.message || "راجع الرابط والتوكن"}`);
+      }
     });
   }
 
@@ -785,18 +838,30 @@
     $("#managersBody").innerHTML = admins.map(admin => `<tr><td>${escape(admin.name)}</td><td>${escape(admin.username)}</td><td>${admin.role === "super" ? "رئيسي" : "فرعي"}</td><td>${admin.active ? "نشط" : "متوقف"}</td></tr>`).join("");
   }
 
-  if (!requireAuth()) return;
-  renderLogin();
-  if (page !== "login") {
-    renderShell();
-    if (page === "dashboard") renderDashboard();
-    if (page === "products") renderProducts();
-    if (page === "visual") renderVisual();
-    if (page === "orders") renderOrders();
-    if (page === "coupons") renderCoupons();
-    if (page === "motion") renderMotion();
-    if (page === "invoice") renderInvoice();
-    if (page === "managers") renderManagers();
-    if (page === "settings") renderSettings();
+  function renderCurrentAdminPage() {
+    if (!requireAuth()) return;
+    renderLogin();
+    if (page !== "login") {
+      renderShell();
+      if (page === "dashboard") renderDashboard();
+      if (page === "products") renderProducts();
+      if (page === "visual") renderVisual();
+      if (page === "orders") renderOrders();
+      if (page === "coupons") renderCoupons();
+      if (page === "motion") renderMotion();
+      if (page === "invoice") renderInvoice();
+      if (page === "managers") renderManagers();
+      if (page === "settings") renderSettings();
+    }
   }
+
+  document.addEventListener("glitter:sync-updated", () => {
+    refreshState();
+    if (page !== "login") renderCurrentAdminPage();
+  });
+
+  G.onReady(() => {
+    refreshState();
+    renderCurrentAdminPage();
+  });
 })();

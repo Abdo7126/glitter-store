@@ -6,8 +6,20 @@
     settings: "glitterSettings",
     admins: "glitterAdmins",
     session: "glitterAdminSession",
-    cart: "glitterCart"
+    cart: "glitterCart",
+    syncConfig: "glitterSyncConfig"
   };
+
+  const cloudKeyMap = {
+    settings: keys.settings,
+    products: keys.products,
+    coupons: keys.coupons,
+    orders: keys.orders,
+    admins: keys.admins
+  };
+
+  const cloudPublicKeys = ["settings", "products", "coupons"];
+  const cloudAdminKeys = ["settings", "products", "coupons", "orders", "admins"];
 
   const defaultSettings = {
     storeName: "Glitter",
@@ -222,8 +234,221 @@
     }
   }
 
-  function write(key, value) {
+  function write(key, value, options = {}) {
     localStorage.setItem(key, JSON.stringify(value));
+    if (options.sync !== false) queueCloudWrite(key, value);
+  }
+
+  function cloudRemoteKey(localKey) {
+    return Object.keys(cloudKeyMap).find(key => cloudKeyMap[key] === localKey) || "";
+  }
+
+  function cloudLocalKey(remoteKey) {
+    return cloudKeyMap[remoteKey] || "";
+  }
+
+  function getSyncConfig() {
+    const globalConfig = window.GLITTER_CLOUD_SYNC || {};
+    const localConfig = read(keys.syncConfig, {});
+    return {
+      enabled: Boolean(localConfig.enabled ?? globalConfig.enabled),
+      endpoint: String(localConfig.endpoint || globalConfig.endpoint || "").trim(),
+      token: String(localConfig.token || "").trim(),
+      timeoutMs: Number(localConfig.timeoutMs || globalConfig.timeoutMs || 4500),
+      autoPull: localConfig.autoPull ?? globalConfig.autoPull ?? true,
+      pullIntervalMs: Number(localConfig.pullIntervalMs || globalConfig.pullIntervalMs || 60000),
+      useJsonp: localConfig.useJsonp ?? globalConfig.useJsonp ?? true,
+      noCorsPost: localConfig.noCorsPost ?? globalConfig.noCorsPost ?? true
+    };
+  }
+
+  function saveSyncConfig(config) {
+    write(keys.syncConfig, {
+      enabled: config.enabled === true || config.enabled === "true",
+      endpoint: String(config.endpoint || "").trim(),
+      token: String(config.token || "").trim(),
+      timeoutMs: Number(config.timeoutMs || 4500),
+      autoPull: config.autoPull !== false && config.autoPull !== "false",
+      pullIntervalMs: Number(config.pullIntervalMs || 60000),
+      useJsonp: config.useJsonp !== false && config.useJsonp !== "false",
+      noCorsPost: config.noCorsPost !== false && config.noCorsPost !== "false"
+    }, { sync: false });
+  }
+
+  function isAdminPage() {
+    return location.pathname.includes("glitter-admin");
+  }
+
+  function cloudAvailable(config = getSyncConfig()) {
+    return Boolean(config.enabled && config.endpoint);
+  }
+
+  function cloudFallback(remoteKey) {
+    if (remoteKey === "settings") return defaultSettings;
+    if (remoteKey === "products") return defaultProducts;
+    if (remoteKey === "coupons") return defaultCoupons;
+    if (remoteKey === "admins") return defaultAdmins;
+    if (remoteKey === "orders") return [];
+    return {};
+  }
+
+  function cloudSnapshot(remoteKeys = cloudAdminKeys) {
+    return remoteKeys.reduce((snapshot, remoteKey) => {
+      const localKey = cloudLocalKey(remoteKey);
+      if (localKey) snapshot[remoteKey] = read(localKey, cloudFallback(remoteKey));
+      return snapshot;
+    }, {});
+  }
+
+  function applyCloudSnapshot(data = {}) {
+    let changed = false;
+    Object.entries(data).forEach(([remoteKey, value]) => {
+      const localKey = cloudLocalKey(remoteKey);
+      if (!localKey) return;
+      const normalized = remoteKey === "settings"
+        ? normalizeVisualAssets(deepMerge(defaultSettings, value || {}))
+        : value;
+      const next = JSON.stringify(normalized);
+      if (localStorage.getItem(localKey) !== next) {
+        localStorage.setItem(localKey, next);
+        changed = true;
+      }
+    });
+    if (changed) document.dispatchEvent(new CustomEvent("glitter:sync-updated", { detail: data }));
+    return changed;
+  }
+
+  function cloudUrl(params = {}) {
+    const config = getSyncConfig();
+    const url = new URL(config.endpoint);
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== "") url.searchParams.set(key, value);
+    });
+    return url.toString();
+  }
+
+  async function cloudFetchJson(url, options = {}, timeoutMs = 4500) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(url, { ...options, cache: "no-store", signal: controller.signal });
+      const text = await response.text();
+      const data = text ? JSON.parse(text) : {};
+      if (!response.ok || data.ok === false) throw new Error(data.error || `Sync request failed: ${response.status}`);
+      return data;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  async function cloudPost(body) {
+    const config = getSyncConfig();
+    if (!cloudAvailable(config)) return { skipped: true };
+    if (config.noCorsPost) {
+      await fetch(config.endpoint, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(body)
+      });
+      return { ok: true, opaque: true };
+    }
+    return cloudFetchJson(config.endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(body)
+    }, config.timeoutMs);
+  }
+
+  function cloudGetJsonp(params = {}) {
+    const config = getSyncConfig();
+    return new Promise((resolve, reject) => {
+      const callbackName = `__glitterSyncCallback_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      const script = document.createElement("script");
+      const timer = setTimeout(() => {
+        cleanup();
+        reject(new Error("Sync request timed out."));
+      }, config.timeoutMs);
+      const cleanup = () => {
+        clearTimeout(timer);
+        script.remove();
+        delete window[callbackName];
+      };
+      window[callbackName] = payload => {
+        cleanup();
+        if (payload?.ok === false) reject(new Error(payload.error || "Sync request failed."));
+        else resolve(payload || {});
+      };
+      script.onerror = () => {
+        cleanup();
+        reject(new Error("Sync request failed."));
+      };
+      script.src = cloudUrl({ ...params, callback: callbackName });
+      document.head.appendChild(script);
+    });
+  }
+
+  async function pullCloudSync(options = {}) {
+    const config = getSyncConfig();
+    if (!cloudAvailable(config)) return { skipped: true };
+    try {
+      const adminScope = options.admin === true || (isAdminPage() && Boolean(config.token));
+      const params = {
+        action: "read",
+        scope: adminScope ? "admin" : "public",
+        token: adminScope ? config.token : ""
+      };
+      const result = config.useJsonp
+        ? await cloudGetJsonp(params)
+        : await cloudFetchJson(cloudUrl(params), {}, config.timeoutMs);
+      applyCloudSnapshot(result.data || {});
+      return { ok: true, updatedAt: result.updatedAt || "" };
+    } catch (error) {
+      console.warn("Glitter cloud sync pull failed:", error);
+      return { ok: false, error: error.message };
+    }
+  }
+
+  function queueCloudWrite(localKey, value) {
+    const remoteKey = cloudRemoteKey(localKey);
+    if (!remoteKey) return;
+    const config = getSyncConfig();
+    if (!cloudAvailable(config) || !config.token) return;
+    window.glitterCloudWriteQueue = (window.glitterCloudWriteQueue || Promise.resolve())
+      .then(() => cloudPost({ action: "write", token: config.token, key: remoteKey, value }))
+      .catch(error => console.warn("Glitter cloud sync write failed:", error));
+  }
+
+  async function pushCloudSnapshot() {
+    const config = getSyncConfig();
+    if (!cloudAvailable(config) || !config.token) throw new Error("بيانات المزامنة غير مكتملة.");
+    return cloudPost({ action: "writeSnapshot", token: config.token, data: cloudSnapshot() });
+  }
+
+  async function createCloudOrder(order) {
+    const config = getSyncConfig();
+    if (!cloudAvailable(config)) return { skipped: true };
+    return cloudPost({ action: "createOrder", order });
+  }
+
+  function waitForSync() {
+    return window.glitterSyncReady || Promise.resolve({ skipped: true });
+  }
+
+  function onReady(callback) {
+    const run = () => waitForSync().finally(callback);
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run);
+    else run();
+  }
+
+  function startAutoSync() {
+    const config = getSyncConfig();
+    if (!cloudAvailable(config) || !config.autoPull || window.glitterAutoSyncTimer) return;
+    const interval = Math.max(15000, Number(config.pullIntervalMs || 60000));
+    window.glitterAutoSyncTimer = setInterval(() => {
+      if (document.hidden) return;
+      pullCloudSync({ silent: true });
+    }, interval);
   }
 
   function migrateProducts(products) {
@@ -243,7 +468,7 @@
     if (!cleaned.length || changed) {
       const existingIds = new Set(cleaned.map(product => product.id));
       cleaned = [...defaultProducts.filter(product => !existingIds.has(product.id)), ...cleaned];
-      write(keys.products, cleaned);
+      write(keys.products, cleaned, { sync: false });
     }
     return cleaned;
   }
@@ -260,11 +485,11 @@
   }
 
   function seed() {
-    if (!localStorage.getItem(keys.products)) write(keys.products, defaultProducts);
-    if (!localStorage.getItem(keys.coupons)) write(keys.coupons, defaultCoupons);
-    if (!localStorage.getItem(keys.orders)) write(keys.orders, []);
-    if (!localStorage.getItem(keys.settings)) write(keys.settings, defaultSettings);
-    if (!localStorage.getItem(keys.admins)) write(keys.admins, defaultAdmins);
+    if (!localStorage.getItem(keys.products)) write(keys.products, defaultProducts, { sync: false });
+    if (!localStorage.getItem(keys.coupons)) write(keys.coupons, defaultCoupons, { sync: false });
+    if (!localStorage.getItem(keys.orders)) write(keys.orders, [], { sync: false });
+    if (!localStorage.getItem(keys.settings)) write(keys.settings, defaultSettings, { sync: false });
+    if (!localStorage.getItem(keys.admins)) write(keys.admins, defaultAdmins, { sync: false });
     const settings = getSettings();
     if (settings.adminWhatsApp === "201000000000") settings.adminWhatsApp = defaultSettings.adminWhatsApp;
     if (settings.supportWhatsApp === "201000000000") settings.supportWhatsApp = defaultSettings.supportWhatsApp;
@@ -274,7 +499,7 @@
     if (!settings.emailjsTemplateId && defaultSettings.emailjsTemplateId) settings.emailjsTemplateId = defaultSettings.emailjsTemplateId;
     if (["template_rpzljai", "rpzljai"].includes(settings.emailjsTemplateId) && defaultSettings.emailjsTemplateId) settings.emailjsTemplateId = defaultSettings.emailjsTemplateId;
     if (!settings.emailjsPublicKey && defaultSettings.emailjsPublicKey) settings.emailjsPublicKey = defaultSettings.emailjsPublicKey;
-    write(keys.settings, normalizeVisualAssets(settings));
+    write(keys.settings, normalizeVisualAssets(settings), { sync: false });
     migrateProducts(read(keys.products, defaultProducts));
   }
 
@@ -332,7 +557,16 @@
     saveAdmins,
     getCart,
     saveCart,
+    getSyncConfig,
+    saveSyncConfig,
+    pullCloudSync,
+    pushCloudSnapshot,
+    createCloudOrder,
+    waitForSync,
+    onReady,
     money,
     escapeHtml
   };
+  window.glitterSyncReady = pullCloudSync();
+  startAutoSync();
 })();

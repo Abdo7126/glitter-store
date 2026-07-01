@@ -53,8 +53,10 @@ glitter-admin.html             Admin login
 glitter-admin-dashboard.html   Admin dashboard
 assets/glitter-site.css        Shared styling
 assets/glitter-data.js         Shared data and local storage logic
+assets/glitter-sync-config.js  Cloud sync endpoint settings
 assets/glitter-store.js        Storefront JavaScript
 assets/glitter-admin.js        Admin JavaScript
+glitter-sync-apps-script.js    Google Apps Script cloud sync backend
 assets/glitter-logo.jpeg       Brand logo
 CNAME                          Custom domain for GitHub Pages
 .nojekyll                      Disables Jekyll processing
@@ -114,8 +116,8 @@ www  CNAME  YOUR_GITHUB_USERNAME.github.io
 
 ## Notes
 
-- This is a static website, so admin changes are stored in the browser using `localStorage`.
-- For production-level shared admin updates across devices, the project would need a backend or hosted database.
+- Admin changes are stored locally first, then can sync across devices through the included Google Apps Script backend.
+- Put the deployed Apps Script URL in `assets/glitter-sync-config.js` or in the admin settings sync panel.
 - Email notifications require EmailJS credentials to be added from the admin settings page.
 - WhatsApp checkout opens a ready order message for the admin number.
 
@@ -126,4 +128,3 @@ www  CNAME  YOUR_GITHUB_USERNAME.github.io
 - Vanilla JavaScript
 - GitHub Pages
 - EmailJS optional integration
-
